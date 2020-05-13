@@ -2,6 +2,9 @@
 
 input: .string "%d%d%d%d"
 output: .string "%d "
+output_arr: .string "array: "
+empty: .string ""
+
 a: .int 0, 0
 x: .int 0, 0
 c: .int 0, 0
@@ -10,49 +13,109 @@ m: .int 0, 0
 .section .text
 
 rnd_gen:
-        mov $0, %r10
-
+	mov $0, %r12
+	
 .rnd.loop:
-        cmp $16, %r10
-        jge .rnd.loop.end
+	cmp $16, %r12
+	jge .rnd.loop.end
 
-        mov (%r9, %r10, 8), %rax
-        mul %rdi
-        add %r8, %rax
-        div %rcx
-        mov %rdx, 8(%r9, %r10, 8)
-        inc %r10
-        jmp .rnd.loop
-
+	mov (%r9, %r12, 8), %rax
+	mul %rdi
+	add %r8, %rax
+	div %rcx
+	mov %rdx, 8(%r9, %r12, 8)
+	inc %r12
+	jmp .rnd.loop	
+		
 .rnd.loop.end:
-        ret
+	ret
+
+sort: 
+    mov $0, %r12
+
+.sort.loop_i:
+    cmp $15, %r12
+    jge .sort.return
+
+    mov %r12, %r13
+
+.sort.loop_j:
+    inc %r13
+    cmp $16, %r13
+    jge .sort.loop_j.end
+    
+    mov (%r9, %r12, 8), %rdx
+    mov (%r9, %r13, 8), %rcx
+    cmp %rdx, %rcx
+    jl .sort.swap
+
+.sort.continue:
+    jmp .sort.loop_j
+
+.sort.swap:
+    mov %rcx, (%r9, %r12, 8)
+    mov %rdx, (%r9, %r13, 8)
+    jmp .sort.continue
+
+.sort.loop_j.end:
+    inc %r12
+    jmp .sort.loop_i
+
+.sort.return:
+    xor %rax, %rax
+    ret
 
 .global main
 main:
+    sub $0x8, %rsp
 
-        sub $0x8, %rsp
+	lea input(%rip), %rdi
+	lea a(%rip), %rsi
+	lea x(%rip), %rdx
+	lea c(%rip), %rcx
+	lea m(%rip), %r8
+	xor %eax, %eax
+	call scanf@plt
+	
+	sub $0x8, %rsp
+	push %rbp
+	mov %rsp, %rbp
 
-        lea input(%rip), %rdi
-        lea a(%rip), %rsi
-        lea x(%rip), %rdx
-        lea c(%rip), %rcx
-        lea m(%rip), %r8
-        xor %eax, %eax
-        call scanf@plt
+	mov a(%rip), %rdi
+	mov x(%rip), %rsi
+	mov %rsi, 8(%rbp)
+	lea 8(%rbp), %r9
+	mov c(%rip), %r8
+	mov m(%rip), %rcx	
+	
+	call rnd_gen
+    lea 8(%rbp), %r9
+    call sort
 
-        push %rbp
-        mov %rsp, %rbp
+    lea output_arr(%rip), %rdi
+    xor %eax, %eax
+    call printf@plt
 
-        mov a(%rip), %rdi
-        mov x(%rip), %rsi
-        mov %rsi, 8(%rbp)
-        lea 8(%rbp), %r9
-        mov c(%rip), %r8
-        mov m(%rip), %rcx
+    mov $0, %r12
+.loop:
+	cmp $16, %r12
+	jge .loop.end
 
-        call rnd_gen
-        lea 8(%rbp), %r9
-        leave
-        xor %eax, %eax
-        add $0x8, %rsp
-        ret
+	lea output(%rip), %rdi			
+	mov 8(%rbp, %r12, 8), %rsi
+	xor %eax, %eax
+	call printf@plt
+
+	inc %r12
+	jmp .loop
+
+.loop.end:	
+    lea empty(%rip), %rdi
+    xor %eax, %eax
+    call puts@plt
+
+	leave	
+	add $0x8, %rsp
+		
+	xor %eax, %eax
+	ret
