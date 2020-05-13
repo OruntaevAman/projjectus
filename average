@@ -5,13 +5,8 @@ output: .string "%d "
 output_arr: .string "array: "
 empty: .string ""
 
-output_min: .string "min = %d\n"
-output_max: .string "max = %d\n"
-output_sum: .string "sum = %d\n"
 output_average: .string "average = %d\n"
-output_mode: .string "mode = %d\n"
-output_median: .string "median = %d\n"
-output_geometric_sum: .string "geometric sum = %d\n"
+
 
 a: .int 0, 0
 x: .int 0, 0
