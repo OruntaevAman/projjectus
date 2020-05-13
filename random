@@ -1,0 +1,58 @@
+.section .data
+
+input: .string "%d%d%d%d"
+output: .string "%d "
+a: .int 0, 0
+x: .int 0, 0
+c: .int 0, 0
+m: .int 0, 0
+
+.section .text
+
+rnd_gen:
+        mov $0, %r10
+
+.rnd.loop:
+        cmp $16, %r10
+        jge .rnd.loop.end
+
+        mov (%r9, %r10, 8), %rax
+        mul %rdi
+        add %r8, %rax
+        div %rcx
+        mov %rdx, 8(%r9, %r10, 8)
+        inc %r10
+        jmp .rnd.loop
+
+.rnd.loop.end:
+        ret
+
+.global main
+main:
+
+        sub $0x8, %rsp
+
+        lea input(%rip), %rdi
+        lea a(%rip), %rsi
+        lea x(%rip), %rdx
+        lea c(%rip), %rcx
+        lea m(%rip), %r8
+        xor %eax, %eax
+        call scanf@plt
+
+        push %rbp
+        mov %rsp, %rbp
+
+        mov a(%rip), %rdi
+        mov x(%rip), %rsi
+        mov %rsi, 8(%rbp)
+        lea 8(%rbp), %r9
+        mov c(%rip), %r8
+        mov m(%rip), %rcx
+
+        call rnd_gen
+        lea 8(%rbp), %r9
+        leave
+        xor %eax, %eax
+        add $0x8, %rsp
+        ret
